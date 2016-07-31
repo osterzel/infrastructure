@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[ -d output ] && rm -rf output
+mkdir output
+
+cfssl gencert -initca csr_ROOT_CA.json | cfssljson -bare output/root_ca
+
+cfssl gencert -initca csr_INTERMEDIATE_CA.json | cfssljson -bare output/intermediate_ca
+
+cfssl sign -ca output/root_ca.pem -ca-key output/root_ca-key.pem -config root_to_intermediate_ca.json output/intermediate_ca.csr | cfssljson -bare output/intermediate_ca
+
+cfssl gencert -ca output/intermediate_ca.pem -ca-key output/intermediate_ca-key.pem -config intermediate_to_client_cert.json csr_kube_apiserver_rsa.json | cfssljson -bare output/kube-apiserver
